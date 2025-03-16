@@ -72,6 +72,8 @@ docker build -t langchain-fuzzer .
 docker run -it langchain-fuzzer /bin/bash
 ```
 
+Note: Make sure that the Docker daemon is running before you run the above commands. 
+
 ## Project Structure
 
 ```
