@@ -196,10 +196,5 @@ For CVE testing, specific LangChain versions may be needed:
 - The CVE test scripts will automatically check out vulnerable versions
 - If you encounter import errors, ensure your main LangChain installation is recent
 
-## Acknowledgements
-
-- [LangChain](https://github.com/langchain-ai/langchain) for creating a powerful LLM framework
-- [Atheris](https://github.com/google/atheris) for providing Python fuzzing capabilities
-- Contributors to the fuzzing and security testing fields
 
 
