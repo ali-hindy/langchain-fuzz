@@ -34,7 +34,7 @@ The project focuses on four key bug classes:
 The easiest way to set up the environment is to use the provided setup script:
 
 ```bash
-git clone https://github.com/yourusername/langchain-fuzzing-project
+git clone https://github.com/ali-hindy/langchain-fuzzing-project
 cd langchain-fuzzing-project
 bash scripts/setup_environment.sh
 ```
@@ -43,7 +43,7 @@ bash scripts/setup_environment.sh
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/langchain-fuzzing-project
+   git clone https://github.com/ali-hindy/langchain-fuzzing-project
    cd langchain-fuzzing-project
    ```
 
