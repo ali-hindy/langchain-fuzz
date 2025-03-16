@@ -108,9 +108,9 @@ print_success "pip upgraded to $($PIP --version)"
 # Check for clang/LLVM and prepare for Atheris
 print_header "Checking Atheris requirements"
 
-# Function to build Clang with libFuzzer from source
+# Function to build Clang with libFuzzer and libc++ from source
 build_clang_with_libfuzzer() {
-    echo "Building Clang with libFuzzer from source..."
+    echo "Building Clang with libFuzzer and libc++ from source..."
     echo "This process may take a while."
 
     # Check for dependencies needed for building LLVM
@@ -157,9 +157,9 @@ build_clang_with_libfuzzer() {
     mkdir -p build
     cd build
 
-    # Configure LLVM with minimal components needed for libFuzzer
-    echo "Configuring LLVM build for ARM64 macOS..."
-    cmake -DLLVM_ENABLE_PROJECTS='clang;compiler-rt' \
+    # Configure LLVM with Clang, compiler-rt, and libcxx
+    echo "Configuring LLVM build for ARM64 macOS with libc++..."
+    cmake -DLLVM_ENABLE_PROJECTS='clang;compiler-rt;libcxx' \
           -G "Unix Makefiles" \
           -S ../llvm \
           -B . \
@@ -168,12 +168,13 @@ build_clang_with_libfuzzer() {
           -DLLVM_TARGETS_TO_BUILD="AArch64" \
           -DLLVM_DEFAULT_TARGET_TRIPLE="arm64-apple-darwin" \
           -DLLVM_ENABLE_LIBCXX=ON \
-          -DLLVM_ENABLE_RUNTIMES="" \
           -DCOMPILER_RT_BUILD_BUILTINS=OFF \
           -DCOMPILER_RT_BUILD_SANITIZERS=ON \
           -DCOMPILER_RT_BUILD_XRAY=OFF \
           -DCOMPILER_RT_BUILD_LIBFUZZER=ON \
           -DCOMPILER_RT_BUILD_PROFILE=OFF \
+          -DLIBCXX_ENABLE_STD=ON \
+          -DLIBCXX_INSTALL_HEADERS=ON \
           -DCMAKE_POLICY_DEFAULT_CMP0116=NEW \
           2>&1 | tee cmake_configure.log
 
@@ -197,11 +198,12 @@ build_clang_with_libfuzzer() {
         exit 1
     fi
 
-    # Set environment variables for Clang
+    # Set environment variables for Clang and libc++ include path
     export CLANG_BIN
     export CC="$CLANG_BIN"
     export CXX="$CLANG_BIN++"
-    print_success "Clang with libFuzzer built successfully at $CLANG_BIN"
+    export CXXFLAGS="-I$(pwd)/include/c++/v1"
+    print_success "Clang with libFuzzer and libc++ built successfully at $CLANG_BIN"
     cd ../..
 }
 
@@ -263,8 +265,8 @@ fi
 # Install Atheris explicitly
 echo "Installing Atheris..."
 # Verify environment variables are set
-if [ -z "$CLANG_BIN" ] || [ -z "$CC" ] || [ -z "$CXX" ]; then
-    print_error "Environment variables CLANG_BIN, CC, and CXX must be set before installing Atheris."
+if [ -z "$CLANG_BIN" ] || [ -z "$CC" ] || [ -z "$CXX" ] || [ -z "$CXXFLAGS" ]; then
+    print_error "Environment variables CLANG_BIN, CC, CXX, and CXXFLAGS must be set before installing Atheris."
     exit 1
 fi
 
@@ -274,8 +276,9 @@ if [ ! -x "$CLANG_BIN" ]; then
     exit 1
 fi
 
+# Install Atheris with custom CXXFLAGS
 if ! $PIP install atheris; then
-    print_error "Failed to install Atheris. Ensure Clang with libFuzzer is properly set up."
+    print_error "Failed to install Atheris. Ensure Clang with libFuzzer and libc++ is properly set up."
     exit 1
 fi
 print_success "Atheris installed successfully"
