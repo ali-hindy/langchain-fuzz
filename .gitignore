@@ -33,4 +33,6 @@ crash-*
 
 # OS specific files
 .DS_Store
-Thumbs.dbllvm-project/
+Thumbs.db
+llvm-project/
+
