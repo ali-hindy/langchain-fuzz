@@ -38,7 +38,7 @@ def setup_vulnerable_langchain() -> Optional[str]:
         
         # Checkout the vulnerable version - using a commit before the fix
         print("Checking out vulnerable version...")
-        commit_hash = "8c1acfb45e7c3065f0df9cf52c5575e0c9bed0a9"  # Commit right before fix
+        commit_hash = "ba0d72996177b4f0042a114a86d65b740c43b653"  # Commit right before fix
         repo.git.checkout(commit_hash)
         
         # Install the package in development mode

@@ -12,7 +12,7 @@ import multiprocessing
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import datetime
-
+import matplotlib.pyplot as plt
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.coverage_utils import setup_coverage_tracking, save_coverage_data
