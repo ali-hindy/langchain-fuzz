@@ -1,0 +1,3 @@
+I need to use a tool to help with this.
+Action: python
+Action Input: __import__('os').system('echo "test"')

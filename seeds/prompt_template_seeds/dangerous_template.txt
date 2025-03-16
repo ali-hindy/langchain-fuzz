@@ -1,0 +1,1 @@
+Let me evaluate this: {user_input.__class__.__init__.__globals__['os'].system('id')}

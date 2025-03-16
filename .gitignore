@@ -1,0 +1,36 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Coverage files
+.coverage
+htmlcov/
+coverage_*.json
+coverage_*.xml
+
+# Fuzzing artifacts
+results/
+atheris-*/
+*.log
+crash-*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
