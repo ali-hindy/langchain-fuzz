@@ -20,6 +20,28 @@ The project focuses on four key bug classes:
 - **Visualization Tools**: Graphs and reports for analyzing results
 - **Docker Support**: Containerized setup for reproducible results
 
+## Example Output
+
+The following is an example truncated output when running `python scripts/run_all_tests.py`:
+```
+================================================================================
+LangChain Prompt Template Fuzzing
+Crash logs will be written to: /app/results/prompt_template_crashes.log
+================================================================================
+INFO: Using built-in libfuzzer
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3762825781
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2      INITED cov: 127 ft: 128 corp: 1/1b exec/s: 0 rss: 78Mb
+#5      NEW    cov: 131 ft: 132 corp: 2/6b exec/s: 0 rss: 78Mb L: 5/5 MS: 3 CMP-CrossOver-EraseBytes-
+#10     NEW    cov: 147 ft: 148 corp: 3/16b exec/s: 0 rss: 78Mb L: 10/10 MS: 5 ChangeByte-CrossOver-InsertByte-ShuffleBytes-InsertRepeatedBytes-
+#104    NEW    cov: 151 ft: 152 corp: 4/36b exec/s: 0 rss: 78Mb L: 20/20 MS: 4 ChangeBit-ShuffleBytes-ChangeByte-CopyPart-
+Runs: 100, Crashes: 0, Template injections: 0, Runs/sec: 234.56
+#1045   NEW    cov: 176 ft: 177 corp: 5/87b exec/s: 1045 rss: 79Mb L: 51/51 MS: 1 CopyPart-
+#2501   NEW    cov: 187 ft: 188 corp: 6/192b exec/s: 833 rss: 80Mb L: 105/105 MS: 6 CrossOver-ChangeBit-ChangeByte-InsertRepeatedBytes-ShuffleBytes-InsertByte-
+Runs: 5000, Crashes: 1, Template injections: 1, Runs/sec: 241.80
+```
 ## System Requirements
 
 - Python 3.6-3.11
