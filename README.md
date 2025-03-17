@@ -164,7 +164,7 @@ python scripts/run_cve_tests.py --output-dir results
 ```
 
 Options:
-- `--cves`: Specify CVEs to test (36258, 44467, 46229, all)
+- `--cves`: Specify CVEs to test (36258, 46229, all)
 - `--output-dir`: Directory to store results (default: results)
 - `--report`: Generate a summary report after testing
 
@@ -187,9 +187,6 @@ Options:
 
 ### CVE-2023-36258
 Arbitrary code execution in PALChain via exec(). [GitHub Advisory: GHSA-gjjr-63x4-v8cq](https://github.com/advisories/GHSA-gjjr-63x4-v8cq)
-
-### CVE-2023-44467
-Bypass of prior fix allowing arbitrary code via `__import__`. [GitHub Advisory: GHSA-gjjr-63x4-v8cq](https://github.com/advisories/GHSA-gjjr-63x4-v8cq)
 
 ### CVE-2023-46229
 SSRF in recursive URL loader. [GitHub Advisory: GHSA-655w-fm8m-m478](https://github.com/advisories/GHSA-655w-fm8m-m478)
