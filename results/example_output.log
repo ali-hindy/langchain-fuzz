@@ -1,0 +1,21 @@
+================================================================================
+Testing for CVE-2023-36258: PALChain arbitrary code execution
+================================================================================
+Setting up vulnerable LangChain for CVE-2023-36258...
+Cloning LangChain repository to /tmp/tmpzx4k92h3...
+Checking out vulnerable version...
+Installing vulnerable LangChain version...
+Vulnerable LangChain setup complete.
+
+Running exploit test...
+
+Test output:
+Created a new PALChain for math.
+Code execution! Current directory: /tmp/tmpzx4k92h3
+User: root
+Result: 42
+
+VULNERABILITY CONFIRMED: PALChain allows arbitrary code execution
+
+Cleaning up environment...
+Cleanup complete.

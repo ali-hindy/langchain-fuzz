@@ -20,9 +20,7 @@ coverage_*.json
 coverage_*.xml
 
 # Fuzzing artifacts
-results/
 atheris-*/
-*.log
 crash-*
 
 # Editor files
