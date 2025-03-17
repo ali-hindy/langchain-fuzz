@@ -59,40 +59,69 @@ LANGCHAIN_DANGEROUS_PATTERNS = [
 ]
 
 
-def generate_string(fdp: Any, max_length: int = 1000) -> str:
-    """Generate a random string or pick from dangerous patterns.
+def generate_string(fdp, max_length=100):
+    """Generate a random string.
     
     Args:
-        fdp: Atheris FuzzedDataProvider
+        fdp: A FuzzedDataProvider instance
         max_length: Maximum length of the string
         
     Returns:
-        Generated string
+        str: A randomly generated string
     """
-    choice = fdp.ConsumeIntInRange(1, 5)
+    length = fdp.ConsumeIntInRange(1, max_length)
+    return fdp.ConsumeString(length)
+
+
+def generate_prompt_template_inputs(fdp):
+    """Generate a template string and a dictionary of variables.
     
-    if choice == 1 and fdp.ConsumeBool():  # Pick from dangerous patterns
-        if fdp.ConsumeBool():
-            return fdp.PickValueInList(INJECTION_PATTERNS)
+    Args:
+        fdp: A FuzzedDataProvider instance
+        
+    Returns:
+        tuple: (template, variables)
+    """
+    # Generate a random number of variables (1-5)
+    num_vars = fdp.ConsumeIntInRange(1, 5)
+    
+    # Generate variable names
+    var_names = []
+    for i in range(num_vars):
+        name_len = fdp.ConsumeIntInRange(3, 10)
+        # Ensure we get a valid variable name by adding a prefix
+        name = "var_" + ''.join(c for c in fdp.ConsumeString(name_len) if c.isalnum() or c == '_')
+        if name:  # Make sure the name is not empty
+            var_names.append(name)
+    
+    # If no valid variable names, add a default one
+    if not var_names:
+        var_names.append("default_var")
+    
+    # Generate a template string with the variables
+    template = "This is a template with "
+    variables = {}
+    
+    for var_name in var_names:
+        # Add the variable to the template
+        template += "{" + var_name + "} "
+        
+        # Generate a variable value
+        value_type = fdp.ConsumeIntInRange(1, 3)
+        if value_type == 1:
+            # String value
+            value_len = fdp.ConsumeIntInRange(1, 20)
+            value = fdp.ConsumeString(value_len)
+        elif value_type == 2:
+            # Integer value
+            value = fdp.ConsumeInt(100)
         else:
-            return fdp.PickValueInList(LANGCHAIN_DANGEROUS_PATTERNS)
+            # Boolean value
+            value = fdp.ConsumeBool()
+        
+        variables[var_name] = value
     
-    if choice == 2:  # Random ASCII string
-        length = fdp.ConsumeIntInRange(0, min(max_length, 1000))
-        return ''.join(chr(fdp.ConsumeIntInRange(32, 126)) for _ in range(length))
-    
-    if choice == 3:  # Random Unicode string
-        length = fdp.ConsumeIntInRange(0, min(max_length, 100))
-        return ''.join(chr(fdp.ConsumeIntInRange(1, 0x10FFFF)) for _ in range(length))
-    
-    if choice == 4:  # Long repeating string
-        char = chr(fdp.ConsumeIntInRange(32, 126))
-        length = fdp.ConsumeIntInRange(0, max_length)
-        return char * length
-    
-    # Default: alphanumeric string
-    length = fdp.ConsumeIntInRange(0, min(max_length, 500))
-    return ''.join(fdp.PickValueInList(string.ascii_letters + string.digits) for _ in range(length))
+    return template, variables
 
 
 def generate_dict(fdp: Any, max_depth: int = 3, max_keys: int = 10) -> Dict[str, Any]:
@@ -252,40 +281,6 @@ def generate_temporary_csv_file(fdp: Any, num_rows: Optional[int] = None,
     
     return path
 
-
-def generate_prompt_template_inputs(fdp: Any) -> Tuple[str, Dict[str, Any]]:
-    """Generate inputs for a prompt template.
-    
-    Args:
-        fdp: Atheris FuzzedDataProvider
-        
-    Returns:
-        Tuple of (template_string, input_variables)
-    """
-    # Generate a template with variables
-    num_vars = fdp.ConsumeIntInRange(0, 5)
-    vars_dict = {}
-    template_parts = []
-    
-    for _ in range(num_vars):
-        var_name = 'var_' + generate_string(fdp, 5)
-        vars_dict[var_name] = generate_string(fdp, 200)
-        
-        # Decide on variable format (with dangerous patterns occasionally)
-        if fdp.ConsumeBool() and fdp.ConsumeBool():
-            template_parts.append(f"{{{var_name}}}")
-        else:
-            template_parts.append(f"{{{var_name}}}")
-    
-    # Add some static text
-    for _ in range(fdp.ConsumeIntInRange(1, 5)):
-        template_parts.append(generate_string(fdp, 50))
-    
-    # Shuffle parts
-    random.shuffle(template_parts)
-    template = ' '.join(template_parts)
-    
-    return template, vars_dict
 
 
 def generate_document_content(fdp: Any) -> str:

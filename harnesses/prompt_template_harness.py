@@ -5,27 +5,29 @@ Tests for template injection vulnerabilities and other input validation issues.
 """
 
 import atheris
-import sys
-import os
-import time
-import traceback
-from typing import Dict, Any, Optional, List
+with atheris.instrument_imports():
+    import sys
+    import os
+    import time
+    import traceback
+    from typing import Dict, Any, Optional, List
 
 # Add parent directory to path to import utils
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.data_generators import generate_string, generate_prompt_template_inputs
 
 # Import LangChain components - with try/except to handle different LangChain versions
-try:
-    from langchain.prompts import PromptTemplate
-    from langchain.prompts.chat import ChatPromptTemplate
-except ImportError:
+with atheris.instrument_imports():
     try:
-        from langchain_core.prompts import PromptTemplate
-        from langchain_core.prompts.chat import ChatPromptTemplate
+        from langchain.prompts import PromptTemplate
+        from langchain.prompts.chat import ChatPromptTemplate
     except ImportError:
-        print("Error: LangChain not installed properly")
-        sys.exit(1)
+        try:
+            from langchain_core.prompts import PromptTemplate
+            from langchain_core.prompts.chat import ChatPromptTemplate
+        except ImportError:
+            print("Error: LangChain not installed properly")
+            sys.exit(1)
 
 # Global counters for statistics
 stats = {
@@ -59,9 +61,9 @@ def monitor_execution(func, *args, **kwargs):
     """
     # Dangerous functions to monitor
     # In a real implementation, we'd use more sophisticated methods like system call tracing
-    original_exec = __builtins__.get('exec')
-    original_eval = __builtins__.get('eval')
-    original_import = __builtins__.get('__import__')
+    original_exec = __builtins__.exec
+    original_eval = __builtins__.eval
+    original_import = __builtins__.__import__
     
     injection_detected = False
     
@@ -73,18 +75,18 @@ def monitor_execution(func, *args, **kwargs):
     
     try:
         # Replace dangerous functions
-        __builtins__['exec'] = detect_template_injection
-        __builtins__['eval'] = detect_template_injection
-        __builtins__['__import__'] = detect_template_injection
+        __builtins__.exec = detect_template_injection
+        __builtins__.eval = detect_template_injection
+        __builtins__.__import__ = detect_template_injection
         
         # Execute the function
         result = func(*args, **kwargs)
         return result
     finally:
-        # Restore original functions
-        __builtins__['exec'] = original_exec
-        __builtins__['eval'] = original_eval
-        __builtins__['__import__'] = original_import
+        # Restore original functions - using attribute assignment instead of item assignment
+        setattr(__builtins__, 'exec', original_exec)
+        setattr(__builtins__, 'eval', original_eval)
+        setattr(__builtins__, '__import__', original_import)
 
 
 def log_crash(template: str, variables: Dict[str, Any], exception: Exception):
@@ -154,37 +156,34 @@ def test_chat_prompt_template(template: str, variables: Dict[str, Any]):
 
 
 def test_one_input(data):
-    """Test function called by Atheris to fuzz one input.
-    
-    Args:
-        data: Input data from Atheris
-    """
     fdp = atheris.FuzzedDataProvider(data)
     stats["runs"] += 1
     
-    # Generate a template and variables
-    template, variables = generate_prompt_template_inputs(fdp)
-    
-    # Choose between different prompt template types
-    choice = fdp.ConsumeIntInRange(1, 2)
-    
     try:
+        # Generate a template and variables
+        template, variables = generate_prompt_template_inputs(fdp)
+        
+        # Choose between different prompt template types
+        choice = fdp.ConsumeIntInRange(1, 2)
+        
         if choice == 1:
             test_prompt_template_regular(template, variables)
         else:
             test_chat_prompt_template(template, variables)
-    except Exception:
-        # Exceptions are already logged in the test functions
-        pass
-    
-    # Print statistics occasionally
-    if stats["runs"] % 100 == 0:
-        elapsed_time = time.time() - stats["start_time"]
-        runs_per_second = stats["runs"] / elapsed_time if elapsed_time > 0 else 0
-        print(f"Runs: {stats['runs']}, "
-              f"Crashes: {stats['crashes']}, "
-              f"Template injections: {stats['template_injection_detected']}, "
-              f"Runs/sec: {runs_per_second:.2f}")
+        
+        # Print statistics occasionally
+        if stats["runs"] % 100 == 0:
+            elapsed_time = time.time() - stats["start_time"]
+            runs_per_second = stats["runs"] / elapsed_time if elapsed_time > 0 else 0
+            print(f"Runs: {stats['runs']}, "
+                  f"Crashes: {stats['crashes']}, "
+                  f"Template injections: {stats['template_injection_detected']}, "
+                  f"Runs/sec: {runs_per_second:.2f}")
+    except Exception as e:
+        # Make sure any exceptions here are logged but don't halt the fuzzer
+        stats["crashes"] += 1
+        print(f"Error in test_one_input: {type(e).__name__}: {str(e)}")
+        # We don't raise the exception so the fuzzer can continue
 
 
 def main():
@@ -206,13 +205,16 @@ def main():
     )
     
     corpus = []
-    if os.path.exists(seed_corpus_dir):
+    if os.path.exists(seed_corpus_dir) and os.listdir(seed_corpus_dir):  # Check if directory exists and is not empty
         for filename in os.listdir(seed_corpus_dir):
             filepath = os.path.join(seed_corpus_dir, filename)
             with open(filepath, 'rb') as f:
                 corpus.append(f.read())
+    else:
+        print("Warning: Seed corpus directory is empty or does not exist. Fuzzer may not find interesting inputs.")
     
     # Setup Atheris with the seed corpus
+    atheris.instrument_all()  # Explicitly instrument all modules
     atheris.Setup(sys.argv, test_one_input, enable_python_coverage=True, corpus=corpus)
     
     # Run the fuzzer
